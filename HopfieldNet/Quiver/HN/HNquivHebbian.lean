@@ -34,7 +34,7 @@ def Hebbian {m : ℕ} (ps : Fin m → (HopfieldNetwork R U).State) : Params (Hop
     trivial
   /- A proof that the weight matrix is symmetric and satisfies the Hebbian learning rule. -/
   hw u v huv := by
-    simp only [sub_apply, smul_apply, smul_eq_mul, Matrix.sum_apply, one_apply]
+    simp only [Matrix.sub_apply, Matrix.smul_apply, smul_eq_mul, Matrix.sum_apply, one_apply]
     have : ∀ k i, (ps k).act i * (ps k).act i = 1 := by
       intros k i ; rw [mul_self_eq_one_iff.mpr]; exact act_one_or_neg_one i
     have huv' : u = v :=
@@ -56,8 +56,8 @@ lemma patterns_pairwise_orthogonal {m : ℕ}  (ps : Fin m → (HopfieldNetwork R
   intros k
   ext t
   rw [Hebbian, mulVec, dotProduct]
-  simp only [sub_apply, smul_apply, smul_eq_mul, Pi.natCast_def, Pi.mul_apply, Pi.sub_apply,
-    Matrix.sum_apply]
+  simp only [Matrix.sub_apply, Matrix.smul_apply, smul_eq_mul, Pi.natCast_def, Pi.mul_apply,
+    Pi.sub_apply, Matrix.sum_apply]
   unfold dotProduct at horth
   have : ∀ i j, (dotProduct (ps i).act (ps j).act) = if i ≠ j then 0 else card U := fun i j ↦ by
     by_cases h : i ≠ j
@@ -148,13 +148,13 @@ theorem outerProduct_sum_mulVec_apply {m : ℕ} (ps : Fin m → (HopfieldNetwork
         _ = ∑ i : Fin m, (ps i).act t * ∑ x : U, (ps i).act x * pj x := ?_
         _ = ∑ i : Fin m, (ps i).act t * dotProduct (ps i).act pj := by simp [dotProduct]
   · refine Finset.sum_congr rfl (fun x _ ↦ ?_)
-    unfold outerProduct
     have:= (Finset.sum_mul (s := (Finset.univ : Finset (Fin m)))
       (f := fun i : Fin m ↦ (ps i).act t * (ps i).act x) (a := pj x))
     rw [← this]
     simp only [mul_eq_mul_right_iff]
     left
-    rw [Matrix.sum_apply t x]
+    -- distribute the matrix sum over its indices before unfolding `outerProduct`
+    simp [Matrix.sum_apply, outerProduct]
   · refine Finset.sum_congr rfl (fun i _ ↦ ?_)
     simpa [dotProduct, mul_assoc] using (mul_sum (s := (Finset.univ : Finset U))
       (f := fun x : U ↦ (ps i).act x * pj x) (a := (ps i).act t)).symm

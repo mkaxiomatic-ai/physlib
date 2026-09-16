@@ -171,7 +171,9 @@ variable {U ζ : Type} [Fintype U] [DecidableEq U]
 variable {NN : NeuralNetwork ℝ U ζ} [TwoStateNeuralNetwork NN]
 
 /-- Generic bridge: any exclusive two–state NN with an `EnergySpec'` is Hamiltonian. -/
-instance IsHamiltonian_of_EnergySpec'
+-- `EnergySpec'` is a structure, not a class, so `spec` cannot be synthesised: this is a
+-- `def` the caller applies, not an instance.
+def IsHamiltonian_of_EnergySpec'
     (spec : TwoState.EnergySpec' (NN := NN))
     [Fintype NN.State]
     [TwoStateExclusive (NN := NN)] :

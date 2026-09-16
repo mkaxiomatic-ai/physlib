@@ -711,7 +711,7 @@ lemma boltzmann_ratio (s s' : NN.State) :
     dsimp [𝓒, CEparams]
     infer_instance
   have h := CE_probability_ratio (NN := NN) (𝓒 := 𝓒) (T := T) s s'
-  simpa [P, 𝓒,
+  simpa [P, 𝓒, CEparams,
         energy_eq_spec (NN := NN) (spec := spec) (p := p) (s := s),
         energy_eq_spec (NN := NN) (spec := spec) (p := p) (s := s'),
         sub_eq_add_neg, add_comm, add_left_comm, add_assoc] using h
@@ -736,7 +736,7 @@ private lemma gibbsUpdate_apply_updPos [DecidableEq U] [Fintype U] [Nonempty U]
   have h_le_real : pPos ≤ 1 := probPos_le_one (NN := NN) f p T s u
   have h_leNN : pPosNN ≤ 1 := by
     change (pPosNN : ℝ) ≤ 1
-    simpa using h_le_real
+    exact h_le_real
   have hne : updPos (s := s) (u := u) ≠ updNeg (s := s) (u := u) := by
     intro h
     have h' := congrArg (fun st => st.act u) h
@@ -746,8 +746,9 @@ private lemma gibbsUpdate_apply_updPos [DecidableEq U] [Fintype U] [Nonempty U]
   have hcoe : ENNReal.ofReal pPos = (pPosNN : ENNReal) := by
     simp [pPosNN]; exact ENNReal.ofReal_eq_coe_nnreal h_nonneg
   simp [pPos, pPosNN, hcoe,
-        PMF.bernoulli_bind_pure_apply_left_of_ne (α:=NN.State) (p:=pPosNN) h_leNN hne]
-  grind
+        PMF.bernoulli_bind_pure_apply_left_of_ne (α:=NN.State) (p:=pPosNN) h_leNN hne,
+        hne]
+  exact PMF.bernoulli_apply _ _
 
 /-- Pointwise evaluation at `updNeg` (ENNReal helper). -/
 lemma gibbsUpdate_apply_updNeg
@@ -761,7 +762,7 @@ lemma gibbsUpdate_apply_updNeg
   have h_le_real : pPos ≤ 1 := probPos_le_one (NN := NN) f p T s u
   have h_leNN : pPosNN ≤ 1 := by
     change (pPosNN : ℝ) ≤ 1
-    simpa using h_le_real
+    exact h_le_real
   have hne : updPos (NN := NN) s u ≠ updNeg (NN := NN) s u := by
     intro h
     have h' := congrArg (fun st => st.act u) h
@@ -775,8 +776,8 @@ lemma gibbsUpdate_apply_updNeg
       simp [pPosNN]
       exact Eq.symm (ENNReal.ofReal_eq_coe_nnreal h_nonneg)
     simpa [this] using (ENNReal.ofReal_sub 1 h_nonneg)
-  simp [pPos, pPosNN, h_eval, hsub]
-  grind
+  simp [pPos, pPosNN, hsub, hne, hne.symm]
+  exact PMF.bernoulli_apply _ _
 
 lemma Kbm_apply_updPos (u : U) (s : NN.State) :
     Kbm NN p T u s (updPos (s := s) (u := u)) = TwoState.probPos (NN := NN) (RingHom.id ℝ) p T s u := by
@@ -801,7 +802,7 @@ lemma Kbm_apply_other (u : U) (s s' : NN.State)
   let pPosNN : ℝ≥0 := ⟨pPos, h_nonneg⟩
   have h_leNN : pPosNN ≤ 1 := by
     change (pPosNN : ℝ) ≤ 1
-    simpa using TwoState.probPos_le_one (NN := NN) f p T s u
+    exact TwoState.probPos_le_one (NN := NN) f p T s u
   have h_K := PMF.bernoulli_bind_pure_apply_other (α:=NN.State) (p:=pPosNN) h_leNN h_pos h_neg
   simp [h_K]
   simp_all only [ne_eq, Function.const_apply, not_false_eq_true,

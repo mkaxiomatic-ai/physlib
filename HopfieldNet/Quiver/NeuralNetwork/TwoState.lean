@@ -534,7 +534,7 @@ noncomputable def gibbsUpdate
   let pPosNN : ℝ≥0 := ⟨pPos, h_nonneg⟩
   have h_le' : pPosNN ≤ 1 := by
     change (pPosNN : ℝ) ≤ 1
-    simpa using h_le
+    exact h_le
   exact
     PMF.bind (PMF.bernoulli pPosNN h_le') (fun b : Bool =>
       cond b (PMF.pure (updPos (s:=s) (u:=u))) (PMF.pure (updNeg (s:=s) (u:=u))))
@@ -690,7 +690,10 @@ lemma flip_energy_rel'
     map_zero' := map_zero f
     map_add' := map_add f }
   have h := ES.flip_energy_relation f_hom p s u
-  simpa [ES.localField_spec] using h
+  have hscale : scale (R:=R) (U:=U) (ζ:=ζ) (NN:=NN) (f:=f_hom)
+      = scale (R:=R) (U:=U) (ζ:=ζ) (NN:=NN) (f:=f) := rfl
+  rw [hscale] at h
+  simpa [f_hom, ES.localField_spec] using h
 
 lemma probPos_eq_of_energy
     {F} [FunLike F R ℝ] [RingHomClass F R ℝ]
@@ -738,7 +741,10 @@ lemma flip_energy_rel'
     map_zero' := map_zero f
     map_add' := map_add f }
   have h := ES.flip_energy_relation f_hom p s u
-  simpa [ES.localField_spec] using h
+  have hscale : scale (R:=R) (U:=U) (ζ:=ζ) (NN:=NN) (f:=f_hom)
+      = scale (R:=R) (U:=U) (ζ:=ζ) (NN:=NN) (f:=f) := rfl
+  rw [hscale] at h
+  simpa [f_hom, ES.localField_spec] using h
 
 end EnergySpec'
 
@@ -822,7 +828,7 @@ lemma Up_eq_updPos_or_updNeg
       have : NN.fact v (s.act v)
           (NN.fnet v (p.w v) (fun w => s.out w) (p.σ v))
           (p.θ v) = TwoStateNeuralNetwork.ζ_pos (NN:=NN) := by
-        simpa [NeuralNetwork.State.net] using hpos
+        simpa [net, NeuralNetwork.State.net] using hpos
       simp [updPos, Function.update, this, hθle]
       grind
     · have hlt : net < θ := lt_of_not_ge hθle
@@ -831,7 +837,7 @@ lemma Up_eq_updPos_or_updNeg
       have : NN.fact v (s.act v)
           (NN.fnet v (p.w v) (fun w => s.out w) (p.σ v))
           (p.θ v) = TwoStateNeuralNetwork.ζ_neg (NN:=NN) := by
-        simpa [NeuralNetwork.State.net] using hneg
+        simpa [net, NeuralNetwork.State.net] using hneg
       simp [updNeg, Function.update, this, hθle]
       grind
   · unfold NeuralNetwork.State.Up
@@ -909,10 +915,9 @@ lemma Up_eq_updPos_or_updNeg_binary
        then updPos (NN:=SymmetricBinary ℝ U) s u
        else updNeg (NN:=SymmetricBinary ℝ U) s u) := by
   intro net θ
-  simpa [net, θ] using
-    (TwoState.Up_eq_updPos_or_updNeg
-        (R:=ℝ) (U:=U) (ζ:=ℝ)
-        (NN:=SymmetricBinary ℝ U) p s u)
+  -- for `SymmetricBinary` the threshold index `θ0` is `fin0`, so this is the general lemma
+  exact TwoState.Up_eq_updPos_or_updNeg
+    (R:=ℝ) (U:=U) (ζ:=ℝ) (NN:=SymmetricBinary ℝ U) p s u
 
 lemma energy_order_from_flip_id_binary
     (spec : EnergySpec' (NN := SymmetricBinary ℝ U))
@@ -955,7 +960,7 @@ lemma energy_is_lyapunov_at_site_binary
   have hlocal : spec.localField p s u = L := by simp [L, net, θ, spec.localField_spec]; rfl
   have hdiff : spec.E p sPos - spec.E p sNeg =
       - (scale (NN := SymmetricBinary ℝ U) (f:=fid)) * L := by
-    simpa [sPos, sNeg, hlocal] using hflip
+    simpa [sPos, sNeg, hlocal, fid, RingHom.id_apply] using hflip
   -- Define κ and prove it's non-negative
   set κ := scale (NN:=SymmetricBinary ℝ U) (f:=fid)
   have hκ_pos : 0 < κ := by aesop--simp [scale_binary, map_ofNat]
@@ -1020,7 +1025,7 @@ lemma energy_is_lyapunov_at_site
   have hdiff :
       spec.E p sPos - spec.E p sNeg
         = - (scale (R:=ℝ) (U:=U) (ζ:=ζ) (NN:=NN) (f:=fid)) * L := by
-    simpa [sPos, sNeg, hlocal] using hflip
+    simpa [sPos, sNeg, hlocal, fid, RingHom.id_apply] using hflip
   set κ := scale (R:=ℝ) (U:=U) (ζ:=ζ) (NN:=NN) (f:=fid)
   have hm := TwoStateNeuralNetwork.m_order (NN:=NN)
   have hκpos : 0 < κ := by
@@ -1105,7 +1110,7 @@ lemma energy_is_lyapunov_at_site''
   have hdiff :
       spec.E p sPos - spec.E p sNeg =
         - (scale (R:=ℝ) (U:=U) (ζ:=ζ) (NN:=NN) (f:=fid)) * L := by
-    simpa [sPos, sNeg, hlocal] using hflip
+    simpa [sPos, sNeg, hlocal, fid, RingHom.id_apply] using hflip
   set κ := scale (R:=ℝ) (U:=U) (ζ:=ζ) (NN:=NN) (f:=fid)
   have hκpos : 0 < κ := by
     have hmo := TwoStateNeuralNetwork.m_order (NN:=NN)

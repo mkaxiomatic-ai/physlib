@@ -253,9 +253,13 @@ lemma pmf_map_pos_implies_preimage {α β : Type} [Fintype α] [DecidableEq β]
       ∃ x : α, p x > 0 ∧ f x = y := by
   intro h_pos
   rw [PMF.map_apply] at h_pos
-  simp only [PMF.ofFintype_apply, tsum_eq_filter_sum] at h_pos
+  simp only [PMF.ofFintype_apply] at h_pos
+  have h_pos' : ∑ a ∈ filter (fun a ↦ f a = y) univ, p a > 0 := by
+    refine lt_of_lt_of_eq h_pos (Eq.trans ?_ (tsum_eq_filter_sum (p := p) (y := y) f))
+    -- the two `if`s differ only in their `Decidable` instance
+    exact tsum_congr fun _ => by congr
   obtain ⟨x, hx_eq, hx_pos⟩ :=
-    (filter_sum_pos_iff_exists_pos (p := p) (f := f) (y := y)).1 h_pos
+    (filter_sum_pos_iff_exists_pos (p := p) (f := f) (y := y)).1 h_pos'
   exact ⟨x, hx_pos, hx_eq⟩
 
 lemma gibbsUpdate_exists_bool (v : U) (s_next : (HopfieldNetwork R U).State) :

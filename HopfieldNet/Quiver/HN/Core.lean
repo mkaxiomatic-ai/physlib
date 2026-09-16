@@ -479,7 +479,7 @@ instance : Fintype ((HopfieldNetwork R U).State) := Fintype.ofEquiv _ ((stateToN
 /--
 `State'` is a type alias for the state of a `HopfieldNetwork` with given parameters.
 -/
-def State' (_ : Params (HopfieldNetwork R U)) := (HopfieldNetwork R U).State
+abbrev State' (_ : Params (HopfieldNetwork R U)) := (HopfieldNetwork R U).State
 
 variable {wθ : Params (HopfieldNetwork R U)}
 

@@ -175,7 +175,9 @@ lemma filter_erase_equiv {U : Type}
 lemma pmf_map_apply_eq_tsum {α β : Type} [Fintype α] [DecidableEq β] {p : α → ENNReal}
     (h_pmf : ∑ a, p a = 1) (f : α → β) (y : β) :
   (PMF.map f (PMF.ofFintype p h_pmf)) y = ∑' (a : α), if y = f a then (PMF.ofFintype p h_pmf) a else 0 := by
-  simp only [PMF.map_apply]; simp_all only [PMF.ofFintype_apply]
+  simp only [PMF.map_apply, PMF.ofFintype_apply]
+  -- the two `if`s differ only in their `Decidable` instance
+  exact tsum_congr fun _ => by congr
 
 lemma filter_mem_iff {α β : Type} [Fintype α] [DecidableEq β] {f : α → β} {y : β} {x : α} :
   x ∈ filter (fun a ↦ f a = y) univ ↔ f x = y := by
