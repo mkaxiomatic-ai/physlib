@@ -158,3 +158,21 @@ srcDir = "scripts"
 [[lean_exe]]
 name = "no_docs"
 srcDir = "scripts/MetaPrograms"
+
+# --- HNBM import (fork-only; not upstream targets) -------------------------
+# Material grafted from mkaratarakis/HNBM@a9a7755, staged here while it is
+# ported into `PhyslibAlpha`. Deliberately absent from `defaultTargets` so a
+# plain `lake build` still builds exactly what upstream builds.
+
+[[lean_lib]]
+name = "HopfieldNet"
+moreLeanArgs = ["-Dwarn.sorry=false"]
+
+[[lean_lib]]
+name = "MCMC"
+moreLeanArgs = ["-Dwarn.sorry=false"]
+
+[[lean_lib]]
+name = "PF"
+globs = ["PF.+"]
+moreLeanArgs = ["-Dwarn.sorry=false"]
