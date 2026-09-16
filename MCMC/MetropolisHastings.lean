@@ -20,7 +20,6 @@ theorem IsReversible.is_stationary {P : Matrix n n ℝ} {π : stdSimplex ℝ n}
   (hP_stoch : IsStochastic P) (h_rev : IsReversible P π) :
   IsStationary P π := by
   ext i
-  dsimp [IsStationary, transpose_apply]
   calc
     ∑ j, P j i * π.val j
       = ∑ j, π.val i * P i j := by

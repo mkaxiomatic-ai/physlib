@@ -339,10 +339,8 @@ lemma tvDist_contract [Nonempty n]
             = (∑ j, |a j|) / 2 := by
     simp only [tvDist, a, r, sub_eq_add_neg]
     congr 1
-    dsimp [sum_neg_distrib, sum_add_distrib]
     congr 1
     ext j
-    dsimp [sum_add_distrib, mul_neg, sum_neg_distrib]
     ring_nf
     simp
   have hR_r : tvDist p q = (∑ k, |r k|) / 2 := by
@@ -398,8 +396,11 @@ lemma dobrushinCoeff_mul [DecidableEq n] (P Q : Matrix n n ℝ)
     have hcontract :
         tvDist (rowDist (P * Q) i) (rowDist (P * Q) i')
           ≤ dobrushinCoeff Q * tvDist (rowDist P i) (rowDist P i') := by
-      simpa [rowDist, Matrix.mul_apply] using
-        (tvDist_contract (P := Q) (p := rowDist P i) (q := rowDist P i') (hp1 := hp1) (hq1 := hq1))
+      have hrow : ∀ l : n, rowDist (P * Q) l = fun j => ∑ k, P l k * Q k j := by
+        intro l; funext j; simp [rowDist, Matrix.mul_apply]
+      rw [hrow i, hrow i']
+      exact tvDist_contract (P := Q) (p := rowDist P i) (q := rowDist P i')
+        (hp1 := hp1) (hq1 := hq1)
     -- bound tvDist among rows of P by δ(P)
     let fP : (n × n) → ℝ := fun p => tvDist (rowDist P p.1) (rowDist P p.2)
     have hset_eq_P :

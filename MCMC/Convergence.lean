@@ -41,7 +41,7 @@ theorem LimitMatrix_absorbing (P : Matrix n n ℝ) (π : stdSimplex ℝ n)
   · ext i j
     simp only [LimitMatrix, mul_apply]
     have h_stat_j := congrArg (fun v => v j) h_stat
-    simp [mulVec, transpose_apply] at h_stat_j
+    simp [mulVec, dotProduct, transpose_apply] at h_stat_j
     simpa [mul_comm] using h_stat_j
 
 /-!
@@ -126,6 +126,9 @@ private lemma dobrushinCoeff_le_one [Nonempty n] (P : Matrix n n ℝ) (hP : IsSt
 private def distributionPushforward (Q : Matrix n n ℝ) (p : n → ℝ) : n → ℝ :=
   fun j => ∑ t, p t * Q t j
 
+private lemma distributionPushforward_eq (Q : Matrix n n ℝ) (p : n → ℝ) :
+    distributionPushforward Q p = fun j => ∑ t, p t * Q t j := rfl
+
 /-- Primitivity yields a spectral gap via Dobrushin contraction on a positive power. -/
 lemma IsPrimitive.has_spectral_gap [Nonempty n] {P : Matrix n n ℝ}
     (h_stoch : IsStochastic P) (h_prim : IsPrimitive P) : HasSpectralGap P := by
@@ -151,13 +154,13 @@ lemma IsPrimitive.has_spectral_gap [Nonempty n] {P : Matrix n n ℝ}
       (hp1 : ∑ t, p t = 1) (hq1 : ∑ t, qv t = 1) :
       Matrix.tvDist (distributionPushforward Q p) (distributionPushforward Q qv) ≤
         Matrix.dobrushinCoeff Q * Matrix.tvDist p qv := by
-    simpa [distributionPushforward] using
+    simpa [distributionPushforward_eq] using
       Matrix.tvDist_contract (P := Q) (p := p) (q := qv) (hp1 := hp1) (hq1 := hq1)
   have T_fix (m : ℕ) : distributionPushforward (P ^ m) π.val = π.val := by
     funext j
     have := congrArg (fun v => v j) (pow_stationary_mulVec (P := P) m h_stoch π hπ_stat)
-    simpa [distributionPushforward, mulVec, transpose_apply, Finset.mul_sum, mul_comm,
-      mul_left_comm, mul_assoc] using this
+    simpa [distributionPushforward_eq, mulVec, dotProduct, transpose_apply,
+      Finset.mul_sum, mul_comm, mul_left_comm, mul_assoc] using this
   have h_tv_blocks :
       ∀ i, Matrix.tvDist (Matrix.rowDist (P ^ (q * k0)) i) π.val ≤ r ^ q := by
     refine Nat.rec (motive := fun q' => ∀ i0, Matrix.tvDist (Matrix.rowDist (P ^ (q' * k0)) i0) π.val ≤ r ^ q')
@@ -192,8 +195,14 @@ lemma IsPrimitive.has_spectral_gap [Nonempty n] {P : Matrix n n ℝ}
     calc
       Matrix.tvDist (Matrix.rowDist (P ^ k) i) π.val
           ≤ Matrix.dobrushinCoeff (P ^ s) * Matrix.tvDist (Matrix.rowDist (P ^ (q * k0)) i) π.val := by
-            simpa [distributionPushforward, Matrix.rowDist, hsplit, Matrix.mul_apply, T_fix s] using
+            have hrow : Matrix.rowDist (P ^ (q * k0) * P ^ s) i
+                = fun j => ∑ t, Matrix.rowDist (P ^ (q * k0)) i t * (P ^ s) t j := by
+              funext j; simp [Matrix.rowDist, Matrix.mul_apply]
+            have hcontr :=
               h_contract (P ^ s) (Matrix.rowDist (P ^ (q * k0)) i) π.val hp1 π.property.2
+            rw [T_fix s, distributionPushforward_eq] at hcontr
+            rw [hsplit, hrow]
+            exact hcontr
       _ ≤ Matrix.tvDist (Matrix.rowDist (P ^ (q * k0)) i) π.val := by
             simpa [one_mul] using mul_le_mul_of_nonneg_right
               (dobrushinCoeff_le_one (P := P ^ s) (isStochastic_pow h_stoch s))
@@ -217,7 +226,7 @@ theorem converges_of_spectral_gap [Nonempty n] {P : Matrix n n ℝ} (_ : IsStoch
     have h_div : Tendsto (fun k : ℕ => k / k0) atTop atTop :=
       tendsto_atTop_atTop.mpr fun b =>
         ⟨b * k0, fun n hn => (Nat.le_div_iff_mul_le hk0pos).mpr hn⟩
-    simpa using h_rpow.comp h_div
+    simpa [Function.comp_def] using h_rpow.comp h_div
   refine tendsto_pi_nhds.mpr fun i => tendsto_pi_nhds.mpr fun j => ?_
   have h_abs_bound : ∀ k, |(P ^ k) i j - L i j| ≤ r ^ (k / k0) := fun k =>
     by simpa [L, LimitMatrix] using h_bound i j k
@@ -259,8 +268,8 @@ lemma distribution_converges_to_stationarity [Nonempty n]
   have h_conv := convergence_to_stationarity P π hMCMC
   rw [tendsto_pi_nhds]
   intro i
-  simpa [distributionAtTime, Matrix.mulVec, Matrix.transpose_apply, LimitMatrix, ← Finset.mul_sum,
-    μ₀.prop.2] using
+  simpa [distributionAtTime, Matrix.mulVec, dotProduct, Matrix.transpose_apply,
+    LimitMatrix, ← Finset.mul_sum, μ₀.prop.2] using
     tendsto_finsetSum Finset.univ fun j _ =>
       (tendsto_pi_nhds.mp (tendsto_pi_nhds.mp h_conv j) i).mul_const (μ₀.val j)
 
