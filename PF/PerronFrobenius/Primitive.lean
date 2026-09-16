@@ -64,7 +64,7 @@ lemma collatzWielandtFn_of_ones_is_pos (hA_irred : IsIrreducible A) (hA_nonneg :
     0 < collatzWielandtFn A (fun _ ↦ 1) := by
   dsimp [collatzWielandtFn]; rw [dif_pos ⟨Classical.arbitrary n, by simp⟩]
   refine inf'_pos _ (fun i _ ↦ ?_)
-  simp only [mulVec_apply, mul_one, div_one]
+  simp only [mulVec_apply_eq_sum, mul_one, div_one]
   refine sum_pos_of_nonneg_of_ne_zero (fun j _ ↦ hA_nonneg i j) (fun h_sum ↦ ?_)
   have h_zero : ∀ j, A i j = 0 := fun j ↦ (sum_eq_zero_iff_of_nonneg fun j _ ↦ hA_nonneg i j).mp h_sum j (mem_univ j)
   rcases Nat.eq_one_or_one_lt (Fintype.card n) Fintype.card_ne_zero with h1 | hgt

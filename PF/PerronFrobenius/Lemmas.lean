@@ -56,7 +56,8 @@ theorem path_exists_in_support_of_irreducible (S : Set n) [DecidablePred S]
       | @cons b c p e ih =>
           refine Quiver.Path.cons ih ?_
           -- `e : 0 < (A.submatrix Subtype.val Subtype.val) _ _`, rewrite as `0 < A _ _`.
-          simpa [Matrix.toQuiver, Matrix.submatrix_apply] using e
+          -- Both sides unfold to `0 < A b.val c.val`; defeq, so `exact` suffices.
+          exact e
     exact conv p_sub
   obtain ⟨p, hp⟩ := path_in_submatrix_to_original S p_sub'
   exact ⟨p, hp⟩
@@ -435,6 +436,7 @@ lemma path_exists_in_support
     letI : Quiver n := Matrix.toQuiver A
     ∃ p : Quiver.Path i j, ∀ k, k ∈ p.activeVertices → k ∈ support := by
   classical
+  letI : DecidablePred support := fun x => ‹DecidablePred (· ∈ support)› x
   simpa using
     Matrix.path_exists_in_support_of_irreducible
       (A := A) (S := support) h_sub_irred i j hi hj

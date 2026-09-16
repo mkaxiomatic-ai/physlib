@@ -69,6 +69,7 @@ Theorem: Frobenius Normal Form.
 theorem exists_frobenius_normal_form [Nonempty n] (_hA_irred : IsIrreducible A)
     (_h_h_gt_1 : index_of_imprimitivity A > 1) :
     ∃ (P : Matrix n n ℝ), IsPermutationMatrix P ∧ True :=
-  ⟨1, ⟨Equiv.refl _, fun i j ↦ by simp [Matrix.one_apply]⟩, trivial⟩
+  ⟨1, ⟨Equiv.refl _, fun i j ↦ by
+    by_cases h : i = j <;> simp [Matrix.one_apply, h]⟩, trivial⟩
 
 end Matrix
