@@ -33,13 +33,18 @@ not exist at this commit, so it is dead at the pinned revision.
 
 ## 3. Build status
 
+All three libraries build clean on Lean 4.33 / Mathlib v4.33.
+
 | Library | Status | Notes |
 |---|---|---|
 | `PF` | green | Perron–Frobenius theory. No `sorry`. |
 | `MCMC` | green | 22 pre-existing `sorry`s, all in `MCMC/Gibbs.lean`. |
-| `HopfieldNet` | in progress | see §6 |
+| `HopfieldNet` | green | No `sorry`. |
 
-Reproduce with `lake exe cache get` then `lake build PF MCMC`.
+No `axiom` is declared anywhere in the import, and the sorry count is unchanged from
+HNBM@`a9a7755` — the port added none.
+
+Reproduce with `lake exe cache get` then `lake build PF MCMC HopfieldNet`.
 
 ## 4. What the port had to change
 
