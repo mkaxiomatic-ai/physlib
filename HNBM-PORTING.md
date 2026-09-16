@@ -121,3 +121,72 @@ Physlib's [AGENTS.md](AGENTS.md) is a hard contract. Known blockers in the curre
 3. **Should `PF` and `MCMC` go to Mathlib instead?** Perron–Frobenius and Markov chain convergence
    are general mathematics. Physlib accepts supporting material under `Mathematics/`, but upstream
    may prefer these land in Mathlib.
+
+## 8. Import audit — what came across, and what did not
+
+Verified by comparing the branch against `a9a7755` directly.
+
+### Declarations: nothing lost
+
+Extracting every `theorem`/`lemma`/`def`/`abbrev`/`instance`/`structure`/`class`/`inductive`/
+`opaque` from the HNBM-side Lean files:
+
+| | |
+|---|---|
+| HNBM @ `a9a7755` | 1526 |
+| this branch | 1527 |
+
+The entire difference is three deliberate edits:
+
+- `def State'` → `abbrev State'` (`HN/Core.lean`) — same declaration, keyword only.
+- `instance IsHamiltonian_of_EnergySpec'` → `def` (`toCanonicalEnsemble.lean`) — same declaration,
+  keyword only; it can no longer be an `instance` because `EnergySpec'` is a structure.
+- `+ lemma distributionPushforward_eq` (`MCMC/Convergence.lean`) — a new `rfl`-lemma, added
+  because the definition no longer unfolds under `simp`.
+
+**No declaration was removed or renamed.**
+
+### Statements: unchanged
+
+The port touches 36 files, 138 insertions and 110 deletions. Every removed line is a tactic
+(`simp`, `simpa`, `rw`, `dsimp`, `grind`, `conv`), an `import` updated for the `aux` → `Auxiliary`
+rename, or one of the two keyword changes above. No theorem, lemma or definition *statement* was
+altered. Anything not in that diff is byte-identical to `a9a7755`.
+
+### Files not carried over
+
+All are build or editor metadata; none contains Lean content. Every one is still reachable in this
+repository — the HNBM history is merged in, so `git show a9a7755:<path>` recovers any of them.
+
+| Path | Why |
+|---|---|
+| `lakefile.lean`, `lakefile.lean.bak` | superseded by the fork's `lakefile.toml` |
+| `docbuild/{lakefile.toml,lake-manifest.json,lean-toolchain}` | doc-gen scaffolding for the standalone repo |
+| `.github/workflows/blueprint.yml` | HNBM's blueprint CI; it drives `leanblueprint` over a `blueprint/` directory that **does not exist** at `a9a7755`, so it could not have run |
+| `HopfieldNet/.DS_Store`, `PF/.DS_Store`, `PF/Combinatorics/.DS_Store` | macOS Finder junk |
+
+Renamed, content preserved: `{HopfieldNet,HopfieldNet/Quiver/BM,PF}/aux.lean` → `Auxiliary.lean`.
+Two are byte-identical; `HopfieldNet/Auxiliary.lean` additionally carries one proof repair.
+
+`NeuralNetwork.lean` **is** kept, even though it is dead at this revision and is not a build target.
+
+### Files overwritten by physlib's versions
+
+These paths exist in both repositories and the merge kept physlib's. HNBM's versions are build
+metadata pinned to Lean v4.30 (`lean-toolchain`, `lake-manifest.json`), editor config
+(`.vscode/settings.json`), a two-line `.gitignore`, and `Physlib.lean` — a nine-line entry point
+importing three `Physlib.*` modules, which is meaningless now that this *is* physlib.
+
+The exception worth recording is HNBM's `README.md`, whose whole text was:
+
+> This repository contains the source code of a paper submitted to the Arxiv. The formalization is
+> built using **Lean 4 (v4.28.0-rc1)** and is compatible with **Mathlib** version `e318a59`
+> (February 20, 2026). [...] The code is provided as a `.zip` file. Extract the contents and
+> navigate to the project's root directory in your terminal. Run `lake build` to check that the
+> project builds correctly.
+
+Note it claims Lean v4.28.0-rc1 while `a9a7755`'s `lean-toolchain` pins v4.30.0 — the README was
+already stale. The arXiv submission it refers to is not identified; that link needs to be
+established by hand before any PR cites it.
+
+`LICENSE.md` (MIT) was imported unchanged — see §7.1.
